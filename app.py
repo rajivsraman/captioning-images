@@ -30,14 +30,12 @@ def download_model_files():
         response = requests.get(GCS_MODEL_URL)
         with open(MODEL_LOCAL_PATH, 'wb') as f:
             f.write(response.content)
-        st.success("Captioning model downloaded!")
 
     if not os.path.exists(RESNET_LOCAL_PATH):
         st.info("Downloading ResNet-50 backbone...")
         response = requests.get(RESNET_URL)
         with open(RESNET_LOCAL_PATH, 'wb') as f:
             f.write(response.content)
-        st.success("ResNet-50 model downloaded!")
 
 # Modified EncoderCNN class using local ResNet weights
 class EncoderCNN(nn.Module):
@@ -45,7 +43,7 @@ class EncoderCNN(nn.Module):
         super(EncoderCNN, self).__init__()
         self.enc_image_size = encoded_image_size
         resnet = torch.hub.load('pytorch/vision', 'resnet50', weights=None)
-        resnet.load_state_dict(torch.load(RESNET_LOCAL_PATH, map_location=torch.device('cpu')))
+        resnet.load_state_dict(torch.load(RESNET_LOCAL_PATH, map_location=torch.device('cpu'), weights_only=False))
         modules = list(resnet.children())[:-2]
         self.resnet = nn.Sequential(*modules)
         self.adaptive_pool = nn.AdaptiveAvgPool2d((encoded_image_size, encoded_image_size))
