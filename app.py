@@ -8,6 +8,7 @@ from io import BytesIO
 from model import EncoderCNN, DecoderWithAttention
 from dataset import get_transforms
 import nltk
+
 nltk.download('punkt')
 
 # Suppress warnings and printing
@@ -30,18 +31,24 @@ def download_model():
 
 # Load model and vocab
 def load_model(device):
+    # Load checkpoint first
+    checkpoint = torch.load(MODEL_LOCAL_PATH, map_location=device)
+
+    # Initialize fresh models with matching architecture
     encoder = EncoderCNN().to(device)
-    checkpoint = torch.load(MODEL_LOCAL_PATH, map_location=device, weights_only=False)
     decoder = DecoderWithAttention(
         embed_size=256,
         hidden_size=512,
         vocab_size=len(checkpoint['vocab']),
         attention_dim=256
     ).to(device)
+
+    # Load pretrained weights from checkpoint
     encoder.load_state_dict(checkpoint['encoder'])
     decoder.load_state_dict(checkpoint['decoder'])
     encoder.eval()
     decoder.eval()
+
     return encoder, decoder, checkpoint['vocab']
 
 # Generate caption
@@ -77,7 +84,7 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     download_model()
-    
+
     # load model but avoid returning objects that print
     model_container = {}
     def init_models():
