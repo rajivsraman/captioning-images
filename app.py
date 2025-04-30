@@ -31,7 +31,7 @@ def download_model():
 # Load model and vocab
 def load_model(device):
     encoder = EncoderCNN().to(device)
-    checkpoint = torch.load(MODEL_LOCAL_PATH, map_location=device)
+    checkpoint = torch.load(MODEL_LOCAL_PATH, map_location=device, weights_only=False)
     decoder = DecoderWithAttention(
         embed_size=256,
         hidden_size=512,
