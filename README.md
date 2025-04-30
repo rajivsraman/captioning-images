@@ -11,6 +11,4 @@ All data is sourced from the Flickr 8K dataset (contains images and five caption
 
 Though the model was trained and evaluated locally, it is also publicly deployed on Google Cloud here: https://console.cloud.google.com/storage/browser/imgcap-deep-model.
 
-There is a fully deployed application available for user testing! It can be found here: https://captioning-images.onrender.com
-
 The full report on the project motivation and evaluation can be found here: https://docs.google.com/document/d/1_SWgdcM0hju0ZAICjY3w4xAzGxTDLB8mJuAAQkHYOQs/edit?usp=sharing
