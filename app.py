@@ -1,14 +1,15 @@
-# caption_app.py
 import os
 import streamlit as st
 import torch
+import torch.nn as nn
 import warnings
 from PIL import Image
 import requests
 from io import BytesIO
-from model import EncoderCNN, DecoderWithAttention
+from model import DecoderWithAttention
 from dataset import get_transforms
 import nltk
+
 nltk.download('punkt')
 
 # Suppress warnings and printing
@@ -17,17 +18,43 @@ torch.set_printoptions(profile="default")
 
 # Constants
 GCS_MODEL_URL = "https://storage.googleapis.com/imgcap-deep-model/best_caption_model.pth"
+RESNET_URL = "https://storage.googleapis.com/imgcap-deep-model/resnet50.pth"
 MODEL_LOCAL_PATH = "best_caption_model.pth"
+RESNET_LOCAL_PATH = "resnet50.pth"
 MAX_LEN = 20
 
-# Download model checkpoint if not already present
-def download_model():
+# Download model checkpoints if not already present
+def download_model_files():
     if not os.path.exists(MODEL_LOCAL_PATH):
-        st.info("Downloading model from Google Cloud Storage...")
+        st.info("Downloading captioning model...")
         response = requests.get(GCS_MODEL_URL)
         with open(MODEL_LOCAL_PATH, 'wb') as f:
             f.write(response.content)
-        st.success("Model downloaded!")
+        st.success("Captioning model downloaded!")
+
+    if not os.path.exists(RESNET_LOCAL_PATH):
+        st.info("Downloading ResNet-50 backbone...")
+        response = requests.get(RESNET_URL)
+        with open(RESNET_LOCAL_PATH, 'wb') as f:
+            f.write(response.content)
+        st.success("ResNet-50 model downloaded!")
+
+# Modified EncoderCNN class using local ResNet weights
+class EncoderCNN(nn.Module):
+    def __init__(self, encoded_image_size=14):
+        super(EncoderCNN, self).__init__()
+        self.enc_image_size = encoded_image_size
+        resnet = torch.hub.load('pytorch/vision', 'resnet50', weights=None)
+        resnet.load_state_dict(torch.load(RESNET_LOCAL_PATH, map_location=torch.device('cpu')))
+        modules = list(resnet.children())[:-2]
+        self.resnet = nn.Sequential(*modules)
+        self.adaptive_pool = nn.AdaptiveAvgPool2d((encoded_image_size, encoded_image_size))
+
+    def forward(self, images):
+        out = self.resnet(images)
+        out = self.adaptive_pool(out)
+        out = out.permute(0, 2, 3, 1)  # [B, enc_image_size, enc_image_size, 2048]
+        return out
 
 # Load model and vocab
 def load_model(device):
@@ -77,9 +104,9 @@ def main():
     st.write("Upload an image, and the model will generate a caption!")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    download_model()
-    
-    # load model but avoid returning objects that print
+    download_model_files()
+
+    # Load model once
     model_container = {}
     def init_models():
         encoder, decoder, vocab = load_model(device)
