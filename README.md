@@ -7,7 +7,7 @@
 
 The project task was to design a deep learning model that can automatically generate captions for images.
 
-All data is sourced from the Flickr 8K dataset (contains images and five captions per image), which can be found here: https://www.kaggle.com/datasets/adityajn105/flickr8k.
+All data is sourced from the Flickr 8K dataset (contains images and five captions per image), which can be found here: https://www.kaggle.com/datasets/adityajn105/flickr8k. If you want to train the model locally, download the zip file from this website, then store the contents in a folder named "data" in your project directory.
 
 Though the model was trained and evaluated locally, it is also publicly deployed on Google Cloud here: https://console.cloud.google.com/storage/browser/imgcap-deep-model.
 
